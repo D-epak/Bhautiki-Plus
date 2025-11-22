@@ -1,4 +1,4 @@
-import { desc, eq, inArray, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import postgresdb from '../../config/db';
 import logger from '../../config/logger';
 import { enquiries, enquiryComments, users } from '../../models/schema';
@@ -84,40 +84,39 @@ export  default class Enquiry {
 
 
      // UPDATE STATUS (ADMIN ONLY)
-    // UPDATE STATUS (ADMIN ONLY)
-static async updateStatus(id, status, comment, adminId) {
-    try {
-        const result = await postgresdb.transaction(async (tx) => {
+    static async updateStatus(id, status, comment, adminId) {
+        try {
+            const result = await postgresdb.transaction(async (tx) => {
 
-            // 1️⃣ Update Enquiry Status
-            const updated = await tx
-                .update(enquiries)
-                .set({ status })
-                .where(eq(enquiries.id, id))
-                .returning();
+                // 1️⃣ Update Enquiry Status
+                const updated = await tx
+                    .update(enquiries)
+                    .set({ status })
+                    .where(and(eq(enquiries.id, id), eq(enquiries.status, "PENDING")))
+                    .returning();
 
-            if (updated.length === 0) {
-                throw new Error("Enquiry not found");
-            }
+                if (updated.length === 0) {
+                    throw new Error("Enquiry not found");
+                }
 
-            // 2️⃣ Insert Comment (only if exists)
-            if (comment) {
-                await tx.insert(enquiryComments).values({
-                    enquiryId: id,
-                    comment,
-                    createdBy: adminId
-                });
-            }
+                // 2️⃣ Insert Comment (only if exists)
+                if (comment) {
+                    await tx.insert(enquiryComments).values({
+                        enquiryId: id,
+                        comment,
+                        createdBy: adminId
+                    });
+                }
 
-            return updated[0];  // Return updated enquiry
-        });
+                return updated[0];  // Return updated enquiry
+            });
 
-        return result;
+            return result;
 
-    } catch (error: any) {
-        //console.log("SERVICE ERROR (updateStatus):", error.message);
-        throw new Error("Failed to update enquiry status");
+        } catch (error: any) {
+            //console.log("SERVICE ERROR (updateStatus):", error.message);
+            throw new Error("Failed to update enquiry status");
+        }
     }
-}
 
 }

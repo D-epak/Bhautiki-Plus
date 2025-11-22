@@ -6,6 +6,7 @@ import router from "./routes";
 import passport from "passport";
 import { jwtStrategy } from "./config/jwt";
 import { apiLimiter } from "./middleware/api-limiter";
+import setupSwagger from './config/swagger';
 
 
 
@@ -20,6 +21,9 @@ app.use(cors({ origin: "*"}));
 passport.use('jwt', jwtStrategy);
 app.use("/", apiLimiter);
 app.use("/", router);
+
+// Serve OpenAPI docs at /docs (if available)
+setupSwagger(app);
 
 
 app.listen(envConfigs.port, () => {
