@@ -23,17 +23,22 @@ components:
           format: email
         password:
           type: string
-        phone:
+      required: [name, email, password]
+    ResendOtpRequest:
+      type: object
+      properties:
+        email:
           type: string
-      required: [email, password, name]
+          format: email
+      required: [email]
     VerifyRequest:
       type: object
       properties:
-        userId:
+        token:
           type: string
         otp:
           type: string
-      required: [userId, otp]
+      required: [token, otp]
     LoginRequest:
       type: object
       properties:
@@ -46,8 +51,10 @@ components:
     AuthResponse:
       type: object
       properties:
-        success:
+        status:
           type: boolean
+        message:
+          type: string
         token:
           type: string
         user:
@@ -55,35 +62,44 @@ components:
     EnquiryRequest:
       type: object
       properties:
-        name:
+        studentName:
           type: string
-        email:
+        studentEmail:
           type: string
-        phone:
+          format: email
+        studentPhone:
           type: string
-        message:
+        course:
           type: string
-      required: [name, email, message]
+      required: [studentName, course]
     Enquiry:
       type: object
       properties:
         id:
           type: string
-        name:
+        studentName:
           type: string
-        email:
+        studentEmail:
           type: string
-        phone:
+        studentPhone:
           type: string
-        message:
+        course:
           type: string
         status:
           type: string
-          example: "OPEN"
+          enum: [PENDING, APPROVED, REJECTED]
+        createdBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
     ErrorResponse:
       type: object
       properties:
-        success:
+        status:
           type: boolean
         message:
           type: string
@@ -98,17 +114,52 @@ paths:
             schema:
               $ref: "#/components/schemas/SignupRequest"
       responses:
-        '201':
+        '200':
           description: OTP sent / user created
           content:
             application/json:
               example:
-                success: true
-                message: "OTP sent to email"
-                data:
-                  userId: "user_123"
+                status: true
+                message: "Signup us succcessfully"
+                token: "<short-lived-token-for-otp-verification>"
         '400':
           description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /auth/resendOtp:
+    post:
+      summary: Resend OTP for verification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResendOtpRequest"
+      responses:
+        '200':
+          description: OTP resent
+          content:
+            application/json:
+              example:
+                status: true
+                message: "OTP resent successfully"
+                token: "<short-lived-token-for-otp-verification>"
+        '400':
+          description: Bad request (missing email or already verified)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        '404':
+          description: User not found
           content:
             application/json:
               schema:
@@ -128,38 +179,25 @@ paths:
           content:
             application/json:
               example:
-                success: true
-                token: "eyJhbGci..."
+                status: true
+                message: "OTP Verified Successfully"
+                token: "<jwt-access-token>"
                 user:
-                  id: "user_123"
+                  id: "<user-uuid>"
                   email: "user@example.com"
+                  isVerified: true
         '400':
-          description: Invalid OTP
+          description: Invalid OTP or token expired
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-  /auth/resendOtp:
-    post:
-      summary: Resend OTP for verification
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                userId:
-                  type: string
-              required: [userId]
-      responses:
-        '200':
-          description: OTP resent
+        '404':
+          description: User not found
           content:
             application/json:
-              example:
-                success: true
-                message: "OTP resent"
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /auth/login:
     post:
       summary: Login with email/password
@@ -175,13 +213,22 @@ paths:
           content:
             application/json:
               example:
-                success: true
-                token: "eyJhbGci..."
+                status: true
+                message: "Login successful"
+                token: "<jwt-access-token>"
                 user:
-                  id: "user_123"
+                  id: "<user-uuid>"
                   email: "user@example.com"
-        '401':
-          description: Invalid credentials
+                  name: "Alice"
+                  role: "FRONT_DESK"
+        '400':
+          description: Missing credentials or not verified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        '404':
+          description: User not found
           content:
             application/json:
               schema:
@@ -198,17 +245,26 @@ paths:
             schema:
               $ref: "#/components/schemas/EnquiryRequest"
       responses:
-        '201':
+        '200':
           description: Enquiry created
           content:
             application/json:
               example:
-                success: true
+                status: true
+                message: "Enquiry created successfully"
                 data:
-                  id: "enq_123"
-                  status: "OPEN"
+                  id: "<enq-uuid>"
+                  studentName: "Bob"
+                  studentEmail: "bob@example.com"
+                  studentPhone: "+19998887766"
+                  course: "Yoga 101"
+                  status: "PENDING"
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
     get:
       summary: List enquiries (requires auth + role ADMIN/FRONT_DESK)
       security:
@@ -230,13 +286,21 @@ paths:
           content:
             application/json:
               example:
-                success: true
+                status: true
+                message: "Enquiries fetched successfully"
                 data:
                   - id: "enq_1"
-                    name: "Alice"
-                    message: "I need help"
-                    status: "OPEN"
+                    studentName: "Alice"
+                    studentEmail: "alice@example.com"
+                    course: "Yoga 101"
+                    status: "PENDING"
                 total: 1
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /api/enquiries/{id}:
     get:
       summary: Get enquiry by id (requires auth + role ADMIN/FRONT_DESK)
@@ -254,14 +318,20 @@ paths:
           content:
             application/json:
               example:
-                success: true
+                status: true
+                message: "Enquiry fetched successfully"
                 data:
                   id: "enq_1"
-                  name: "Alice"
-                  message: "I need help"
-                  status: "OPEN"
+                  studentName: "Alice"
+                  studentEmail: "alice@example.com"
+                  course: "Yoga 101"
+                  status: "PENDING"
         '404':
           description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /api/enquiries/{id}/status:
     put:
       summary: Update enquiry status (requires AUTH + role ADMIN)
@@ -282,19 +352,28 @@ paths:
               properties:
                 status:
                   type: string
-                  example: "CLOSED"
+                  enum: [PENDING, APPROVED, REJECTED]
+                comment:
+                  type: string
       responses:
         '200':
           description: Updated enquiry
           content:
             application/json:
               example:
-                success: true
+                status: true
+                message: "Enquiry status updated"
                 data:
                   id: "enq_1"
-                  status: "CLOSED"
+                  status: "APPROVED"
         '403':
           description: Forbidden (role)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        '404':
+          description: Not found
           content:
             application/json:
               schema:

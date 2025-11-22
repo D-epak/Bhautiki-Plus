@@ -6,6 +6,14 @@ dotenv.config();
 
 const currentEnv = process.env.NODE_ENV ?? "development";
 
+if (process.env.NODE_ENV !== "production") {
+  dotenv.config({
+    path: `.env.${currentEnv}`,
+    override: true,
+  });
+}
+
+
 // Load environment specific overrides if present (e.g. .env.production)
 dotenv.config({
   path: `.env.${currentEnv}`,
