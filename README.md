@@ -187,6 +187,7 @@ Response example (200):
 You can open `openapi.yaml` several ways depending on your workflow. Pick an option below.
 
 - **Swagger Editor (quick, browser)**:
+  - Go to https://bhautiki-plus.onrender.com/docs/
   - Go to https://editor.swagger.io/
   - Use `File -> Import File` and select `openapi.yaml`, or copy & paste the file contents into the editor.
 
@@ -212,7 +213,8 @@ npx redoc-cli serve openapi.yaml
   - Open `openapi.yaml` and use the extension command (e.g. `Preview Swagger`) to see a rendered UI.
 
 - **Postman**:
-  - `File -> Import` -> choose `openapi.yaml` to import the API and try requests.
+  - `File -> Import` -> choose `postmanCollection.json` to import the API and try requests.
+  
 
 - **Serve with Swagger UI from your app** (optional - I can add this):
   - Install `swagger-ui-express` and `yamljs`:
