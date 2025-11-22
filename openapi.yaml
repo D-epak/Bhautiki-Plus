@@ -4,6 +4,8 @@ info:
   description: API documentation for Bhautiki Plus (auth and enquiries)
   version: 1.0.0
 servers:
+  - url: https://bhautiki-plus.onrender.com
+    description: Production (render) server
   - url: http://localhost:3000
     description: Local dev server
 components:

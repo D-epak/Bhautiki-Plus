@@ -1,9 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken"
 import dbservices from "../services/dbservices";
-import { hashPassword , generateOtp, comparePassword  } from "../utils/common";
-import { sendEmail } from "../utils/template";
-import { generateAuthTokens } from "../config/jwt";
 
 export default class Enquiry {
 

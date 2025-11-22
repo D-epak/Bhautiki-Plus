@@ -1,4 +1,23 @@
+
 # Bhautiki Plus
+
+**Live server:** https://bhautiki-plus.onrender.com/
+
+**Test accounts (for development)**
+
+- **Admin**
+  - email: `admin@gmail.com`
+  - password: `123456`
+
+- **Front-desk**
+  - email: `frontdesk@gmail.com`
+  - password: `123456`
+
+Important note about OTP / email delivery (development):
+
+- I have implemented email sending using `nodemailer` in the project. If you want to run emails locally using SMTP, please uncomment the mailer and template files (`src/config/mailer.ts` and `src/utils/template.ts`) and set the SMTP env variables in your `.env` file.
+- On Render (and some free hosting providers) outbound SMTP is blocked; because of that limitation OTPs are returned in the API response during demos/testing so the verification flow works without a working SMTP provider.
+- The mailing code exists in the repo; enabling SMTP locally will send real emails. In production you can switch to a transactional email provider (SMTP credentials or a provider like Resend) if desired.
 
 This repository contains the Bhautiki Plus backend (Express + TypeScript + Drizzle ORM).
 
@@ -216,6 +235,21 @@ app.use('/docs', swaggerUi.serve, swaggerUi.setup(spec));
 **Next steps (optional)**:
 - Add an endpoint to serve Swagger UI (e.g., `swagger-ui-express`) and mount `openapi.yaml` at `/docs`.
 - Add example `.env.example` file with required env vars.
+
+**Test accounts (for development)**:
+
+- **Admin**:
+  - email: `admin@gmail.com`
+  - password: `123456`
+
+- **Front-desk**:
+  - email: `frontdesk@gmail.com`
+  - password: `123456`
+
+**Important note about OTP / email delivery**:
+
+- During development the project may run on hosts (or local setups) that block free SMTP relays. Because of this, OTPs may be returned in the API response for development/testing so you can complete verification flows without a working SMTP provider.
+- If you prefer SMTP providers, you can replace or extend the mailer; see `src/config/mailer.ts` for the current implementation.
 
 ---
 

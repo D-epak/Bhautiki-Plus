@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken"
 import dbservices from "../services/dbservices";
 import { hashPassword, generateOtp, comparePassword } from "../utils/common";
-import { sendEmail } from "../utils/template";
+// import { sendEmail } from "../utils/template";
 import { generateAuthTokens } from "../config/jwt";
 
 export default class Auth {
@@ -24,8 +24,8 @@ export default class Auth {
             });
             const otp = generateOtp();  // e.g., "325912"
             const token = jwt.sign({ email }, otp, { expiresIn: "5m" });
-            await sendEmail(email, otp)
-            res.status(200).json({ status: true, message: "Signup us succcessfully", token: token })
+            // await sendEmail(email, otp)
+            res.status(200).json({ status: true, message: "Signup us succcessfully", token: token ,otp:otp });
         } catch (error) {
             //console.log(error.message)
             res.status(500).json({ status: false, message: error.message || "Internal server Error" })
@@ -68,12 +68,13 @@ export default class Auth {
             const token = jwt.sign({ email }, otp, { expiresIn: "5m" });
 
             // send new OTP email
-            await sendEmail(email, otp);
+            // await sendEmail(email, otp);
 
             return res.status(200).json({
                 status: true,
                 message: "OTP resent successfully",
-                token
+                token,
+                otp
             });
 
         } catch (error: any) {
